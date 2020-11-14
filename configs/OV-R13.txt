@@ -1,0 +1,120 @@
+interface Tunnel0
+ no shutdown
+ description "DMVPN spoke to R1 hub"
+ ip address 172.31.255.13 255.255.255.0
+ no ip redirects
+ ip nhrp authentication dmvpnpas
+ ip nhrp map 172.31.255.1 172.16.19.2
+ ip nhrp map multicast 172.16.19.2
+ ip nhrp network-id 1
+ ip nhrp nhs 172.31.255.1
+ ip nhrp registration timeout 4
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 101 md5 ospfpassarea0dmvpn
+ ip ospf network non-broadcast
+ ip ospf dead-interval 60
+ ip ospf hello-interval 20
+ ip ospf priority 0
+ ipv6 address FE80::13 link-local
+ ipv6 address 20FF:CCFF:3000:1::13/64
+ ipv6 enable
+ ipv6 nhrp authentication dmvpnpas
+ ipv6 nhrp map 20FF:CCFF:3000:1::1/64 172.16.19.2
+ ipv6 nhrp map multicast 172.16.19.2
+ ipv6 nhrp network-id 1
+ ipv6 nhrp nhs 20FF:CCFF:3000:1::1
+ ipv6 nhrp registration timeout 4
+ ipv6 ospf 10 area 0
+ ipv6 ospf neighbor FE80::1
+ ipv6 ospf network non-broadcast
+ ipv6 ospf hello-interval 20
+ ipv6 ospf dead-interval 60
+ ipv6 ospf priority 0
+ tunnel source GigabitEthernet0/0
+ tunnel mode gre multipoint
+!
+interface GigabitEthernet0/0
+ no shutdown
+ description "R13 to R20"
+ ip address 172.16.20.2 255.255.255.248
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::13 link-local
+ ipv6 address 20FF:CCFF:1000:20::2/64
+ ipv6 enable
+!
+interface GigabitEthernet0/1
+ no shutdown
+ description "R13 to R16"
+ ip address 35.11.1.13 255.255.255.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfpassarea0
+ ip ospf dead-interval minimal hello-multiplier 5
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::13 link-local
+ ipv6 address 20FF:CCFF:200D:A2::13/64
+ ipv6 enable
+ ipv6 ospf authentication ipsec spi 500 md5 1234567890ABCDEF1234567890ABCDEF
+ ipv6 ospf 10 area 0
+ ipv6 ospf hello-interval 1
+ ipv6 ospf dead-interval 4
+!
+interface GigabitEthernet0/2
+ no shutdown
+ description "R13 to R15"
+ ip address 35.11.0.13 255.255.255.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfpassarea0
+ ip ospf dead-interval minimal hello-multiplier 5
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::13 link-local
+ ipv6 address 20FF:CCFF:200D:A1::13/64
+ ipv6 enable
+!
+interface GigabitEthernet0/3
+ no shutdown
+ description "not used"
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+router ospf 10
+ router-id 0.0.0.13
+ auto-cost reference-bandwidth 1000
+ area 0 authentication message-digest
+ passive-interface GigabitEthernet0/0
+ passive-interface GigabitEthernet0/3
+ network 35.11.0.0 0.0.0.255 area 0
+ network 35.11.1.0 0.0.0.255 area 0
+ network 172.31.255.0 0.0.0.255 area 0
+ neighbor 172.31.255.1
+ neighbor 172.31.255.5
+!
+ip forward-protocol nd
+!
+ipv6 unicast-routing
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 99.99.144.2 name "to R20"
+ip route 35.10.0.0 255.255.0.0 172.31.255.1 name "to R1 through dmvpn"
+ip route 50.50.96.0 255.255.248.0 172.31.255.1 name "to R9 through dmvpn"
+ip route 50.50.104.0 255.255.254.0 172.31.255.1 name "to R5 through dmvpn"
+ip route 172.31.254.0 255.255.255.0 172.31.255.1 name "to gre tunnel networks through dmvpn"
+!
+ipv6 route 20FF:CCFF:200A::/48 20FF:CCFF:3000:1::1 name "to R9 through dmvpn"
+ipv6 route 20FF:CCFF:200B::/48 20FF:CCFF:3000:1::1 name "to R5 through dmvpn"
+ipv6 route 20FF:CCFF:200C::/48 20FF:CCFF:3000:1::1 name "to R1 through dmvpn"
+ipv6 route 20FF:CCFF:3000:1001::/64 20FF:CCFF:3000:1::1 name "to gre tunnel networks through dmvpn"
+ipv6 route ::/0 20FF:CCFE:FFFF:3::2
+ipv6 router ospf 10
+ router-id 6.0.0.13
+ auto-cost reference-bandwidth 1000
+ passive-interface GigabitEthernet0/0

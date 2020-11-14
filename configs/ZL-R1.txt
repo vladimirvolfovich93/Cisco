@@ -1,0 +1,149 @@
+
+ipv6 unicast-routing
+!
+interface Tunnel0
+ no shutdown
+ description "DMVPN hub"
+ ip address 172.31.255.1 255.255.255.0
+ no ip redirects
+ ip nhrp authentication dmvpnpas
+ ip nhrp map multicast dynamic
+ ip nhrp network-id 1
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 101 md5 ospfpassarea0dmvpn
+ ip ospf network non-broadcast
+ ip ospf dead-interval 60
+ ip ospf hello-interval 20
+ ip ospf priority 10
+ ipv6 address FE80::1 link-local
+ ipv6 address 20FF:CCFF:3000:1::1/64
+ ipv6 enable
+ ipv6 nhrp authentication dmvpnpas
+ ipv6 nhrp map multicast dynamic
+ ipv6 nhrp network-id 1
+ ipv6 ospf 10 area 0
+ ipv6 ospf neighbor FE80::13
+ ipv6 ospf neighbor FE80::5
+ ipv6 ospf network non-broadcast
+ ipv6 ospf hello-interval 20
+ ipv6 ospf dead-interval 60
+ ipv6 ospf priority 10
+ tunnel source GigabitEthernet0/0
+ tunnel mode gre multipoint
+!
+interface Tunnel1
+ no shutdown
+ description "IPv4 GRE tun to R9"
+ ip address 172.31.254.1 255.255.255.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 102 md5 ospfpassarea0gretun
+ ip ospf network point-to-point
+ ip ospf dead-interval 60
+ ip ospf hello-interval 20
+ tunnel source 172.16.19.2
+ tunnel destination 172.16.18.2
+!
+interface Tunnel2
+ no shutdown
+ description "IPv6 GRE tun to R9"
+ no ip address
+ ipv6 address FE80::1 link-local
+ ipv6 address 20FF:CCFF:3000:1001::1/64
+ ipv6 enable
+ ipv6 ospf 10 area 0
+ ipv6 ospf network point-to-point
+ ipv6 ospf hello-interval 20
+ ipv6 ospf dead-interval 60
+ tunnel source 20FF:CCFF:1000:19::2
+ tunnel mode gre ipv6
+ tunnel destination 20FF:CCFF:1000:18::2
+!
+interface GigabitEthernet0/0
+ no shutdown
+ description "to Internet (R19)"
+ ip address 172.16.19.2 255.255.255.240
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::1 link-local
+ ipv6 address 20FF:CCFF:1000:19::2/64
+ ipv6 enable
+!
+interface GigabitEthernet0/1
+ no shutdown
+ description "R1 to R2"
+ ip address 35.10.8.1 255.255.254.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfpassarea0
+ ip ospf dead-interval minimal hello-multiplier 5
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::1 link-local
+ ipv6 address 20FF:CCFF:200C:A2::1/64
+ ipv6 enable
+ ipv6 ospf authentication ipsec spi 500 md5 1234567890ABCDEF1234567890ABCDEF
+ ipv6 ospf 10 area 0
+ ipv6 ospf hello-interval 1
+ ipv6 ospf dead-interval 4
+!
+interface GigabitEthernet0/2
+ no shutdown
+ description "R1 to R3"
+ ip address 35.10.0.1 255.255.248.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfarea0
+ ip ospf dead-interval minimal hello-multiplier 5
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::1 link-local
+ ipv6 address 20FF:CCFF:200C:A1::1/64
+ ipv6 enable
+ ipv6 ospf 10 area 0
+ ipv6 ospf hello-interval 1
+ ipv6 ospf dead-interval 4
+!
+interface GigabitEthernet0/3
+ no shutdown
+ description "not used"
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+router ospf 10
+ router-id 0.0.0.1
+ auto-cost reference-bandwidth 1000
+ area 0 authentication message-digest
+ passive-interface GigabitEthernet0/0
+ passive-interface GigabitEthernet0/3
+ passive-interface Tunnel2
+ network 35.10.0.0 0.0.7.255 area 0
+ network 35.10.8.0 0.0.1.255 area 0
+ network 172.31.254.0 0.0.0.255 area 0
+ network 172.31.255.0 0.0.0.255 area 0
+ neighbor 172.31.255.13
+ neighbor 172.31.255.5
+ default-information originate
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 99.99.144.0
+ip route 35.11.0.0 255.255.252.0 172.31.255.13 name "to R13 through dmvpn"
+ip route 50.50.96.0 255.255.248.0 172.31.254.9 name "to R9 through gre tunnel"
+ip route 50.50.104.0 255.255.254.0 172.31.255.5 name "to R5 through dmvpn"
+!
+ipv6 route 20FF:CCFF:200A::/48 20FF:CCFF:3000:1001::9 name "to R9 through gre tunnel"
+ipv6 route 20FF:CCFF:200B::/48 20FF:CCFF:3000:1::5 name "to R5 through dmvpn"
+ipv6 route 20FF:CCFF:200D::/48 20FF:CCFF:3000:1::13 name "to R13 through dmvpn"
+ipv6 route ::/0 20FF:CCFE:FFFF:3::
+ipv6 router ospf 10
+ router-id 6.0.0.1
+ auto-cost reference-bandwidth 1000
+ default-information originate
+ passive-interface GigabitEthernet0/0

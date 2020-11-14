@@ -1,0 +1,72 @@
+interface GigabitEthernet0/0
+ no shutdown
+ description "R23 to R22"
+ ip address 35.10.194.23 255.255.255.128
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfpassarea0
+ ip ospf dead-interval minimal hello-multiplier 5
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::23 link-local
+ ipv6 address 20FF:CCFF:200C:D3::23/64
+ ipv6 enable
+ ipv6 ospf authentication ipsec spi 500 md5 1234567890ABCDEF1234567890ABCDEF
+ ipv6 ospf 10 area 0
+ ipv6 ospf hello-interval 1
+ ipv6 ospf dead-interval 4
+!
+interface GigabitEthernet0/1
+ no shutdown
+ description "not used"
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+interface GigabitEthernet0/2
+ no shutdown
+ description "R23 to R24"
+ ip address 35.10.193.23 255.255.255.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfpassarea0
+ ip ospf dead-interval minimal hello-multiplier 5
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::23 link-local
+ ipv6 address 20FF:CCFF:200C:D1::23/64
+ ipv6 enable
+ ipv6 ospf 10 area 0
+ ipv6 ospf hello-interval 1
+ ipv6 ospf dead-interval 4
+!
+interface GigabitEthernet0/3
+ no shutdown
+ description "not used"
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+router ospf 10
+ router-id 0.0.0.23
+ auto-cost reference-bandwidth 1000
+ area 0 authentication message-digest
+ passive-interface GigabitEthernet0/1
+ passive-interface GigabitEthernet0/3
+ network 35.10.193.0 0.0.0.255 area 0
+ network 35.10.194.0 0.0.0.127 area 0
+!
+ip forward-protocol nd
+!
+ipv6 unicast-routing
+!
+no ip http server
+no ip http secure-server
+!
+ipv6 router ospf 10
+ router-id 6.0.0.23
+ auto-cost reference-bandwidth 1000

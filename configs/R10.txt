@@ -1,0 +1,102 @@
+interface GigabitEthernet0/0
+ no shutdown
+ description "not used"
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+interface GigabitEthernet0/1
+ no shutdown
+ description "R10 to R11"
+ ip address 50.50.101.10 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::10 link-local
+ ipv6 address 20FF:CCFF:200A:A4::10/64
+ ipv6 enable
+!
+interface GigabitEthernet0/2
+ no shutdown
+ description "R10 to R9"
+ ip address 50.50.100.10 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::10 link-local
+ ipv6 address 20FF:CCFF:200A:A3::10/64
+ ipv6 enable
+!
+interface GigabitEthernet0/3
+ no shutdown
+ description "not used"
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+key chain EIGRP1
+ key 1
+  key-string eigrp1secretpass
+!
+router eigrp EIGRP1
+ !
+ address-family ipv4 unicast autonomous-system 1
+  !
+  af-interface default
+   shutdown
+   passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/1
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/2
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  topology base
+  exit-af-topology
+  network 50.50.100.0 0.0.0.255
+  network 50.50.101.0 0.0.0.255
+  eigrp router-id 0.0.0.10
+ exit-address-family
+ !
+ address-family ipv6 unicast autonomous-system 1
+  !
+  af-interface default
+   shutdown
+   passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/1
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/2
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  topology base
+  exit-af-topology
+  eigrp router-id 6.0.0.10
+ exit-address-family
+!
+ipv6 unicast-routing
+!

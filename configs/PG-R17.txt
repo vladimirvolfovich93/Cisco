@@ -1,0 +1,59 @@
+interface GigabitEthernet0/0
+ no shutdown
+ description "R17 to R5"
+ ip address 172.16.17.1 255.255.255.248
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::17 link-local
+ ipv6 address 20FF:CCFF:1000:17::1/64
+ ipv6 enable
+!
+interface GigabitEthernet0/1
+ no shutdown
+ description "R17 to R18"
+ ip address 90.90.129.17 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::17 link-local
+ ipv6 address 20FF:CCFF:FFFF:2::17/64
+ ipv6 enable
+!
+interface GigabitEthernet0/2
+ no shutdown
+ description "R17 to R19"
+ ip address 90.90.128.17 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::17 link-local
+ ipv6 address 20FF:CCFF:FFFF:1::17/64
+ ipv6 enable
+!
+interface GigabitEthernet0/3
+ no shutdown
+ description "R17 to R20"
+ ip address 90.90.131.17 255.255.255.128
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::17 link-local
+ ipv6 address 20FF:CCFF:FFFF:5::17/64
+ ipv6 enable
+!
+ip forward-protocol nd
+!
+ipv6 unicast-routing
+!
+
+!
+no ip http server
+no ip http secure-server
+ip route 99.99.140.0 255.255.255.254 99.99.130.1 name "to DP-R1 through PC-R1"
+ip route 99.99.144.0 255.255.255.254 99.99.136.2 name "to ZL-R1 through PF-R1"
+ip route 99.99.144.2 255.255.255.254 99.99.138.2 name "to OV-R1 through PF-R2"
+!
+ipv6 route 20FF:CCFD:FFFF:3::/127 20FF:CCFD:FFFF:2::1 name "to DP-R1 through PC-R1"
+ipv6 route 20FF:CCFE:FFFF:3::/127 20FF:CCFF:FFFF:1::2 name "to ZL-R1 through PF-R1"
+ipv6 route 20FF:CCFE:FFFF:3::2/127 20FF:CCFF:FFFF:2::2 name "to OV-R1 through PF-R2"

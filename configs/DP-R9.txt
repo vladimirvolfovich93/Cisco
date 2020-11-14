@@ -1,0 +1,204 @@
+interface Tunnel0
+ no shutdown
+ no ip address
+!
+interface Tunnel1
+ no shutdown
+ description "IPv4 GRE tun1 to R1"
+ ip address 172.31.254.9 255.255.255.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 102 md5 ospfpassarea0gretun
+ ip ospf network point-to-point
+ ip ospf dead-interval 60
+ ip ospf hello-interval 20
+ tunnel source 172.16.18.2
+ tunnel destination 172.16.19.2
+!
+interface Tunnel2
+ no shutdown
+ description "IPv6 GRE tun2 to R1"
+ no ip address
+ ipv6 address FE80::9 link-local
+ ipv6 address 20FF:CCFF:3000:1001::9/64
+ ipv6 enable
+ ipv6 ospf authentication ipsec spi 500 md5 1234567890ABCDEF1234567890ABCDEF
+ ipv6 ospf 10 area 0
+ ipv6 ospf network point-to-point
+ ipv6 ospf hello-interval 20
+ ipv6 ospf dead-interval 60
+ tunnel source 20FF:CCFF:1000:18::2
+ tunnel mode gre ipv6
+ tunnel destination 20FF:CCFF:1000:19::2
+!
+interface GigabitEthernet0/0
+ no shutdown
+ description "R9 to R18"
+ ip address 172.16.18.2 255.255.255.248
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::9 link-local
+ ipv6 address 20FF:CCFF:1000:18::2/64
+ ipv6 enable
+!
+interface GigabitEthernet0/1
+ no shutdown
+ description "R9 to R12"
+ ip address 50.50.96.9 255.255.254.0
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::9 link-local
+ ipv6 address 20FF:CCFF:200A:A1::9/64
+ ipv6 enable
+!
+interface GigabitEthernet0/2
+ no shutdown
+ description "R9 to R10"
+ ip address 50.50.100.9 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::9 link-local
+ ipv6 address 20FF:CCFF:200A:A3::9/64
+ ipv6 enable
+!
+interface GigabitEthernet0/3
+ no shutdown
+ description "R9 to R11"
+ ip address 50.50.102.9 255.255.255.248
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::9 link-local
+ ipv6 address 20FF:CCFF:200A:A5::9/64
+ ipv6 enable
+!
+!
+router eigrp EIGRP1
+ !
+ address-family ipv4 unicast autonomous-system 1
+  !
+  af-interface default
+   shutdown
+   passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/1
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/2
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/3
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface Tunnel1
+   summary-address 50.50.96.0 255.255.248.0
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  topology base
+   redistribute ospf 10 metric 1000 1000 255 127 1500
+  exit-af-topology
+  neighbor 172.31.255.5 Tunnel1 remote 2
+  network 50.50.96.0 0.0.1.255
+  network 50.50.100.0 0.0.0.255
+  network 50.50.102.8 0.0.0.7
+  eigrp router-id 0.0.0.9
+ exit-address-family
+ !
+ address-family ipv6 unicast autonomous-system 1
+  !
+  af-interface default
+   shutdown
+   passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/1
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/2
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/3
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface Tunnel2
+   summary-address 20FF:CCFF:200B::/48
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  topology base
+   redistribute ospf 10 metric 1000 1000 255 127 1500
+  exit-af-topology
+  neighbor 20FF:CCFF:3000:1::5 Tunnel2 remote 2
+  eigrp router-id 0.0.0.9
+ exit-address-family
+!
+router ospf 10
+ router-id 0.0.0.9
+ auto-cost reference-bandwidth 1000
+ area 0 authentication message-digest
+ redistribute eigrp 1 subnets
+ network 172.31.254.0 0.0.0.255 area 0
+!
+ip forward-protocol nd
+!
+key chain EIGRP1
+ key 1
+  key-string eigrp1secretpass
+!
+ipv6 unicast-routing
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 99.99.140.0 name "to R18"
+ip route 35.10.0.0 255.255.0.0 172.31.254.1 name "to R1 through gre tunnel"
+ip route 35.11.0.0 255.255.252.0 172.31.254.1 name "to R13 through gre tunnel"
+ip route 50.50.104.0 255.255.254.0 172.31.254.1 95 name "to R5 through gre tunnel"
+ip route 172.31.255.0 255.255.255.0 172.31.254.1 name "to dmvpn network through gre tunnel"
+!
+ipv6 route 20FF:CCFF:200B::/48 20FF:CCFF:3000:1001::1 95 name "to R5 through gre tunnel"
+ipv6 route 20FF:CCFF:200C::/48 20FF:CCFF:3000:1001::1 name "to R1 through gre tunnel"
+ipv6 route 20FF:CCFF:200D::/48 20FF:CCFF:3000:1001::1 name "to R13 through gre tunnel"
+ipv6 route 20FF:CCFF:3000:1::/64 20FF:CCFF:3000:1001::1 name "to dmvpn network through gre tunnel"
+ipv6 route ::/0 20FF:CCFD:FFFF:3:: name "to R18"
+ipv6 router ospf 10
+ router-id 6.0.0.9
+ auto-cost reference-bandwidth 1000
+ passive-interface GigabitEthernet0/0
+ passive-interface GigabitEthernet0/1
+ passive-interface GigabitEthernet0/2
+ passive-interface GigabitEthernet0/3
+ redistribute eigrp 1

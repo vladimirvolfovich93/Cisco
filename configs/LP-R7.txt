@@ -1,0 +1,103 @@
+interface GigabitEthernet0/0
+ no shutdown
+ description "R7 to R6"
+ ip address 50.50.105.130 255.255.255.128
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::7 link-local
+ ipv6 address 20FF:CCFF:200B:A3::7/64
+ ipv6 enable
+!
+interface GigabitEthernet0/1
+ no shutdown
+ description "not used"
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+interface GigabitEthernet0/2
+ no shutdown
+ description "R7 to R5"
+ ip address 50.50.104.7 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::7 link-local
+ ipv6 address 20FF:CCFF:200B:A1::7/64
+ ipv6 enable
+!
+interface GigabitEthernet0/3
+ no shutdown
+ description "not used"
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+!
+router eigrp EIGRP1
+ !
+ address-family ipv4 unicast autonomous-system 1
+  !
+  af-interface default
+   shutdown
+   passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/2
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/0
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  topology base
+  exit-af-topology
+  network 50.50.104.0 0.0.0.255
+  network 50.50.105.128 0.0.0.127
+  eigrp router-id 0.0.0.7
+ exit-address-family
+ !
+ address-family ipv6 unicast autonomous-system 1
+  !
+  af-interface default
+   shutdown
+   passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/0
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/2
+   no shutdown
+   authentication mode md5
+   authentication key-chain EIGRP1
+   no passive-interface
+  exit-af-interface
+  !
+  topology base
+  exit-af-topology
+  eigrp router-id 6.0.0.7
+ exit-address-family
+!
+key chain EIGRP1
+ key 1
+  key-string eigrp1secretpass
+!
+ipv6 unicast-routing
+!

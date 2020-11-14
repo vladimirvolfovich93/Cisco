@@ -1,0 +1,93 @@
+interface GigabitEthernet0/0
+ no shutdown
+ description "R3 to R4"
+ ip address 35.10.12.3 255.255.255.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfpassarea0
+ ip ospf dead-interval minimal hello-multiplier 5
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::3 link-local
+ ipv6 address 20FF:CCFF:200C:A4::3/64
+ ipv6 enable
+ ipv6 ospf authentication ipsec spi 500 md5 1234567890ABCDEF1234567890ABCDEF
+ ipv6 ospf 10 area 0
+ ipv6 ospf hello-interval 1
+ ipv6 ospf dead-interval 4
+!
+interface GigabitEthernet0/1
+ no shutdown
+ description "R3 to R8"
+ ip address 35.10.64.3 255.255.255.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfpassarea42
+ ip ospf dead-interval 12
+ ip ospf hello-interval 3
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::3 link-local
+ ipv6 address 20FF:CCFF:200C:B1::3/64
+ ipv6 enable
+ ipv6 ospf 10 area 42
+ ipv6 ospf hello-interval 3
+ ipv6 ospf dead-interval 12
+!
+interface GigabitEthernet0/2
+ no shutdown
+ description "R3 to R1"
+ ip address 35.10.0.3 255.255.248.0
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfpassarea0
+ ip ospf dead-interval minimal hello-multiplier 5
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::3 link-local
+ ipv6 address 20FF:CCFF:200C:A1::3/64
+ ipv6 enable
+ ipv6 ospf 10 area 0
+ ipv6 ospf hello-interval 1
+ ipv6 ospf dead-interval 4
+!
+interface GigabitEthernet0/3
+ no shutdown
+ description "R3 to R14"
+ ip address 35.10.65.3 255.255.255.128
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 100 md5 ospfpassarea42
+ ip ospf dead-interval 12
+ ip ospf hello-interval 3
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address FE80::3 link-local
+ ipv6 address 20FF:CCFF:200C:B2::3/64
+ ipv6 enable
+ ipv6 ospf 10 area 42
+ ipv6 ospf hello-interval 3
+ ipv6 ospf dead-interval 12
+!
+router ospf 10
+ router-id 0.0.0.3
+ auto-cost reference-bandwidth 1000
+ area 0 authentication message-digest
+ area 42 authentication message-digest
+ area 42 stub no-summary
+ network 35.10.0.0 0.0.7.255 area 0
+ network 35.10.12.0 0.0.0.255 area 0
+ network 35.10.64.0 0.0.0.255 area 42
+ network 35.10.65.0 0.0.0.127 area 42
+!
+ip forward-protocol nd
+!
+ipv6 unicast-routing
+!
+no ip http server
+no ip http secure-server
+!
+ipv6 router ospf 10
+ router-id 6.0.0.3
+ auto-cost reference-bandwidth 1000
+ area 42 stub no-summary
