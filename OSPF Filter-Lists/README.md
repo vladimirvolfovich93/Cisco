@@ -5,13 +5,21 @@ OSPF Filter-Lists
 В зону 10 не попадают маршруты из зоны 42. Из зоны 0 все маршруты известны. На R2 и R24 отфильтрованы приходящие LSA type 3:
 
 conf t
+
  ip prefix-list FILTER-area42to10 deny 35.10.64.0/24
+ 
  ip prefix-list FILTER-area42to10 deny 35.10.65.0/25
+ 
  ip prefix-list FILTER-area42to10 deny 35.10.65.128/27
+ 
  ip prefix-list FILTER-area42to10 permit 0.0.0.0/0 le 32
+ 
  router ospf 10
+ 
   area 10 filter-list prefix FILTER-area42to10 in
+  
   exit
+  
  exit;
 
 Все маршрутизаторы в OSPF доступны между собой, на ZL-R1(OSPF 10: default-iformation originate) распространяется маршрут по умолчанию;
