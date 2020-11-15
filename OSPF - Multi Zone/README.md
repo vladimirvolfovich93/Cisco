@@ -16,6 +16,6 @@ OSPF - Multi Zone
 
 Настроена метрика маршрута - увеличен cost до 201 на интерфейсах R14 Gi0/3 и R8 Gi0/0;
 
-По-умолчанию трафик балансируется через ECMP;
+По-умолчанию трафик c R4 > R2 или R3 > ZL-R1 - балансируется через ECMP;
 
 ![Иллюстрация к проекту](https://github.com/vladimirvolfovich93/Part1/blob/main/OSPF%20-%20Multi%20Zone/ospf.png)
